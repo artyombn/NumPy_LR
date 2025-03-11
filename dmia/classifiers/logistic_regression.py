@@ -163,6 +163,12 @@ class LogisticRegression:
 
         return loss, dw
 
+    # @staticmethod
+    # def append_biases(X):
+    #     return sparse.hstack((X, np.ones(X.shape[0])[:, np.newaxis])).tocsr()
+
     @staticmethod
     def append_biases(X):
-        return sparse.hstack((X, np.ones(X.shape[0])[:, np.newaxis])).tocsr()
+        if sparse.issparse(X):
+            return sparse.hstack((X, np.ones((X.shape[0], 1)))).tocsr()
+        return np.hstack((X, np.ones((X.shape[0], 1))))
