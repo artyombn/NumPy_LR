@@ -47,6 +47,9 @@ class LogisticRegression:
             # replacement is faster than sampling without replacement.              #
             #########################################################################
 
+            indices = np.random.choice(num_train, batch_size, replace=True)
+            X_batch = X[indices]
+            y_batch = y[indices]
 
             #########################################################################
             #                       END OF YOUR CODE                                #
@@ -61,6 +64,7 @@ class LogisticRegression:
             # Update the weights using the gradient and the learning rate.          #
             #########################################################################
 
+            self.w -= learning_rate * gradW
 
             #########################################################################
             #                       END OF YOUR CODE                                #
@@ -92,7 +96,9 @@ class LogisticRegression:
         # Hint: It might be helpful to use np.vstack and np.sum                   #
         ###########################################################################
 
-
+        logits = X.dot(self.w)
+        probs = 1 / (1 + np.exp(-logits))
+        y_proba = np.vstack((1 - probs, probs)).T
 
         ###########################################################################
         #                           END OF YOUR CODE                              #
@@ -116,8 +122,9 @@ class LogisticRegression:
         # TODO:                                                                   #
         # Implement this method. Store the predicted labels in y_pred.            #
         ###########################################################################
+
         y_proba = self.predict_proba(X, append_bias=True)
-        y_pred = ...
+        y_pred = np.argmax(y_proba, axis=1)
 
         ###########################################################################
         #                           END OF YOUR CODE                              #
@@ -137,16 +144,22 @@ class LogisticRegression:
         dw = np.zeros_like(self.w)  # initialize the gradient as zero
         loss = 0
         # Compute loss and gradient. Your code should not contain python loops.
-
+        logits = X_batch.dot(self.w)
+        probs = 1 / (1 + np.exp(-logits))
 
         # Right now the loss is a sum over all training examples, but we want it
         # to be an average instead so we divide by num_train.
-        # Note that the same thing must be done with gradient.
+        num_train = X_batch.shape[0]
+        loss = (-np.sum(y_batch * np.log(probs) + (1 - y_batch) * np.log(1 - probs)) / num_train)
 
+        # Note that the same thing must be done with gradient.
+        dw = X_batch.T.dot(probs - y_batch) / num_train
 
         # Add regularization to the loss and gradient.
         # Note that you have to exclude bias term in regularization.
 
+        loss += reg / 2 * np.sum(self.w[:-1] ** 2)
+        dw[:-1] += reg * self.w[:-1]
 
         return loss, dw
 
